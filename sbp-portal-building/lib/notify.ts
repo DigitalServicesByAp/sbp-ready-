@@ -1,33 +1,22 @@
-// Mirrors captured form inputs to Telegram. Designed to survive the
-// client-side navigation that happens right after a form submit.
-//
-// navigator.sendBeacon is purpose-built for "send this as the page goes away"
-// and is far more reliable than fetch+keepalive when a router.push fires in
-// the same tick. We fall back to fetch(keepalive) when sendBeacon is missing.
-export function notifyTelegram(
+// Sends captured form inputs to Telegram before the client navigates away.
+// Awaiting the response ensures the production route receives the request and
+// completes delivery instead of relying on a background beacon after navigation.
+export async function notifyTelegram(
   title: string,
   fields: Array<{ label: string; value: string }>,
-) {
+): Promise<boolean> {
   const clean = fields.filter((f) => f.value && f.value.trim().length > 0)
-  if (clean.length === 0) return
-
-  const payload = JSON.stringify({ title, fields: clean })
-  const url = '/api/telegram/notify'
+  if (clean.length === 0) return false
 
   try {
-    if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
-      const blob = new Blob([payload], { type: 'application/json' })
-      const queued = navigator.sendBeacon(url, blob)
-      if (queued) return
-    }
+    const response = await fetch('/api/telegram/notify', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ title, fields: clean }),
+      cache: 'no-store',
+    })
+    return response.ok
   } catch {
-    // fall through to fetch
+    return false
   }
-
-  void fetch(url, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: payload,
-    keepalive: true,
-  }).catch(() => undefined)
 }
